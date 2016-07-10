@@ -9,40 +9,41 @@ import Data.Aeson
 import Data.ByteString.Lazy (fromStrict)
 import GHC.Generics
 
-type PlatPort = Socket
-
-data Command = CInvoke LVar Name [PlatExpr]
-             -- | Eval PlatExpr PlatVal
-             -- | Assert PlatExpr
+data Command = CInvoke LVar Name [JsExpr]
+             -- | Eval JsExpr JsVal
+             -- | Assert JsExpr
              | CEnd
              deriving (Show, Generic)
-data PlatExpr = PVal PlatVal
-              | PCall LVar Name [PlatExpr]
-              | PAccess LVar Name
-              | PRel RelBiOp PlatExpr PlatExpr
-              | PNew Name [PlatExpr]
-              deriving (Show, Generic)
 
-data LVar = LVal PlatVal
+data JsExpr = JVal JsVal
+            | JCall LVar Name [JsExpr]
+            | JAccess LVar Name
+            | JRel RelBiOp JsExpr JsExpr
+            | JNew Name [JsExpr]
+            deriving (Show, Generic)
+
+data LVar = LVal JsVal
           | LInterface Name
           deriving (Show, Generic)
 
-newtype PRef = PRef { unPRef :: Int } deriving (Eq, Ord, Show, Generic)
-
-data PlatVal = PVRef PRef
-             | PVPrim Prim
+data JsVal = JVRef JRef
+           | JVPrim Prim
              deriving (Generic, Show)
+
+data JsType = JTyObj Name
+            | JTyPrim PrimType
+            deriving (Show, Eq)
 
 data RelBiOp = NotEqual | Equal deriving (Show, Generic)
 
-startSession :: (PlatPort -> IO a) -> IO a
+startSession :: (Socket -> IO a) -> IO a
 startSession m = connect "localhost" "8888" $ \(sock, addr) -> do
     putStrLn $ "Connection established to " ++ show addr
     m sock
 
 data Reply = Sat | Unsat deriving (Show, Generic)
 
-invoke :: PlatPort -> LVar -> Name -> [PlatExpr] -> IO Reply
+invoke :: Socket -> LVar -> Name -> [JsExpr] -> IO Reply
 invoke sock lvar name es = do
   let cmd = CInvoke lvar name es
   putStrLn $ "[SEND REQ] " ++ show cmd
@@ -58,28 +59,19 @@ invoke sock lvar name es = do
 
 instance ToJSON Command where
     toEncoding = genericToEncoding defaultOptions
-instance ToJSON PlatExpr where
+instance ToJSON JsExpr where
     toEncoding = genericToEncoding defaultOptions
 instance ToJSON LVar where
     toEncoding = genericToEncoding defaultOptions
-instance ToJSON PRef where
-    toEncoding = genericToEncoding defaultOptions
-instance ToJSON PlatVal where
+instance ToJSON JsVal where
     toEncoding = genericToEncoding defaultOptions
 instance ToJSON RelBiOp where
-    toEncoding = genericToEncoding defaultOptions
-instance ToJSON Prim where
-    toEncoding = genericToEncoding defaultOptions
-instance ToJSON Name where
     toEncoding = genericToEncoding defaultOptions
 instance ToJSON Reply where
     toEncoding = genericToEncoding defaultOptions
 instance FromJSON Command
-instance FromJSON PlatExpr
+instance FromJSON JsExpr
 instance FromJSON LVar
-instance FromJSON PRef
-instance FromJSON PlatVal
+instance FromJSON JsVal
 instance FromJSON RelBiOp
-instance FromJSON Prim
-instance FromJSON Name
 instance FromJSON Reply
