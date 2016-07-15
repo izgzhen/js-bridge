@@ -5,8 +5,11 @@ module JS.Platform where
 import JS.Type
 
 import Network.Simple.TCP
+import System.IO
 import Data.Aeson
-import Data.ByteString.Lazy (fromStrict)
+import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BC
 import GHC.Generics
 
 data Command = CInvoke LVar Name [JsExpr]
@@ -43,19 +46,24 @@ startSession m = connect "localhost" "8888" $ \(sock, addr) -> do
 
 data Reply = Sat | Unsat deriving (Show, Generic)
 
-invoke :: Socket -> LVar -> Name -> [JsExpr] -> IO Reply
-invoke sock lvar name es = do
+invoke :: Handle -> LVar -> Name -> [JsExpr] -> IO Reply
+invoke handler lvar name es = do
   let cmd = CInvoke lvar name es
   putStrLn $ "[SEND REQ] " ++ show cmd
-  sendLazy sock (encode cmd)
-  mReplyRaw <- recv sock 100
-  case mReplyRaw of
-    Just replyRaw -> do
-      let mReply = decode (fromStrict replyRaw) :: Maybe Reply
-      case mReply of
-        Just reply -> return reply
-        Nothing -> error "Invalid reply"
-    Nothing -> error "Invalid reply"
+  BS.hPut handler (BSL.toStrict (encode cmd) `BC.snoc` '\n')
+  replyRaw <- BS.hGetLine handler
+  let mReply = decode (BSL.fromStrict replyRaw) :: Maybe Reply
+  case mReply of
+      Just reply -> do
+        putStrLn $ "[GET RES] " ++ show reply
+        return reply
+      Nothing -> error "Invalid reply"
+
+end :: Handle -> IO ()
+end sock = do
+  let cmd = CEnd
+  putStrLn $ "[SEND REQ] " ++ show cmd
+  BS.hPut sock (BSL.toStrict (encode cmd) `BC.snoc` '\n')
 
 instance ToJSON Command where
     toEncoding = genericToEncoding defaultOptions
