@@ -1,6 +1,10 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module JS.Platform where
+module JS.Platform (
+  JsExpr(..), LVar(..), JsVal(..), JsType(..),
+  RelBiOp(..), Reply(..), PlatPort,
+  startSession, invoke, eval, assert, end
+) where
 
 import JS.Type
 
@@ -14,8 +18,9 @@ import qualified Data.ByteString.Char8 as BC
 import GHC.Generics
 
 data Command = CInvoke LVar Name [JsExpr]
-             -- | Eval JsExpr JsVal
-             -- | Assert JsExpr
+             | Eval JsExpr
+                    (Maybe [JsExpr]) -- probing assertions
+             | Assert JsExpr
              | CEnd
              deriving (Show, Generic)
 
@@ -48,13 +53,16 @@ startSession m = connect "localhost" "8888" $ \(sock, addr) -> do
     end handler
     return ret
 
-data Reply = Sat | Unsat deriving (Show, Generic)
+data Reply = Sat
+           | Unsat
+           | Replies [Bool] -- True: Sat, False: Unsat
+           | InvalidReqeust String
+           deriving (Show, Generic)
 
 type PlatPort = Handle
 
-invoke :: Handle -> LVar -> Name -> [JsExpr] -> IO Reply
-invoke handler lvar name es = do
-  let cmd = CInvoke lvar name es
+sendCmd :: Handle -> Command -> IO Reply
+sendCmd handler cmd = do
   putStrLn $ "[SEND REQ] " ++ show cmd
   BS.hPut handler (BSL.toStrict (encode cmd) `BC.snoc` '\n')
   replyRaw <- BS.hGetLine handler
@@ -63,7 +71,16 @@ invoke handler lvar name es = do
       Just reply -> do
         putStrLn $ "[GET RES] " ++ show reply
         return reply
-      Nothing -> error "Invalid reply"
+      Nothing -> return (InvalidReqeust "Invalid reply")
+
+invoke :: Handle -> LVar -> Name -> [JsExpr] -> IO Reply
+invoke handler lvar name es = sendCmd handler (CInvoke lvar name es)
+
+eval :: Handle -> JsExpr -> Maybe [JsExpr] -> IO Reply
+eval handler e mDomains = sendCmd handler (Eval e mDomains)
+
+assert :: Handle -> JsExpr -> IO Reply
+assert handler e = sendCmd handler (Assert e)
 
 end :: Handle -> IO ()
 end handler = do
