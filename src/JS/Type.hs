@@ -22,10 +22,7 @@ data PrimType = PTyNull
               | PTyBool
               deriving (Show, Eq)
 
-newtype Name = Name { unName :: String } deriving (Eq, Generic, Ord)
-
-instance Show Name where
-    show (Name x) = x
+newtype Name = Name { unName :: String } deriving (Eq, Show, Generic, Ord)
 
 newtype JRef = JRef { unJRef :: Int } deriving (Eq, Ord, Show, Generic)
 

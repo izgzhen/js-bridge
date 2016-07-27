@@ -5,6 +5,7 @@ module JS.Platform where
 import JS.Type
 
 import Network.Simple.TCP
+import Network.Socket (socketToHandle)
 import System.IO
 import Data.Aeson
 import qualified Data.ByteString.Lazy as BSL
@@ -39,12 +40,17 @@ data JsType = JTyObj Name
 
 data RelBiOp = NotEqual | Equal deriving (Show, Generic)
 
-startSession :: (Socket -> IO a) -> IO a
+startSession :: (PlatPort -> IO a) -> IO a
 startSession m = connect "localhost" "8888" $ \(sock, addr) -> do
     putStrLn $ "Connection established to " ++ show addr
-    m sock
+    handler <- socketToHandle sock ReadWriteMode
+    ret <- m handler
+    end handler
+    return ret
 
 data Reply = Sat | Unsat deriving (Show, Generic)
+
+type PlatPort = Handle
 
 invoke :: Handle -> LVar -> Name -> [JsExpr] -> IO Reply
 invoke handler lvar name es = do
@@ -60,10 +66,10 @@ invoke handler lvar name es = do
       Nothing -> error "Invalid reply"
 
 end :: Handle -> IO ()
-end sock = do
+end handler = do
   let cmd = CEnd
   putStrLn $ "[SEND REQ] " ++ show cmd
-  BS.hPut sock (BSL.toStrict (encode cmd) `BC.snoc` '\n')
+  BS.hPut handler (BSL.toStrict (encode cmd) `BC.snoc` '\n')
 
 instance ToJSON Command where
     toEncoding = genericToEncoding defaultOptions
