@@ -25,6 +25,7 @@ data Command = CInvoke LVar Name [JsExpr]
              deriving (Show, Generic)
 
 data JsExpr = JVal JsVal
+            | JInterface Name
             | JCall LVar Name [JsExpr]
             | JAccess LVar Name
             | JRel RelBiOp JsExpr JsExpr
@@ -37,6 +38,7 @@ data LVar = LVal JsVal
 
 data JsVal = JVRef JRef
            | JVPrim Prim
+           | JVClos Int -- n-ary closure
              deriving (Generic, Show)
 
 data JsType = JTyObj Name
