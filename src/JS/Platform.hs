@@ -2,7 +2,7 @@
 
 module JS.Platform (
   JsExpr(..), LVar(..), JsVal(..), JsType(..),
-  RelBiOp(..), Reply(..), PlatPort,
+  RelBiOp(..), Reply(..), PlatPort, Command(..),
   startSession, invoke, eval, assert, end
 ) where
 
@@ -18,9 +18,9 @@ import qualified Data.ByteString.Char8 as BC
 import GHC.Generics
 
 data Command = CInvoke LVar Name [JsExpr]
-             | Eval JsExpr
-                    (Maybe [JsExpr]) -- probing assertions
-             | Assert JsExpr
+             | CEval JsExpr
+                     (Maybe [JsExpr]) -- probing assertions
+             | CAssert JsExpr
              | CEnd
              deriving (Show, Generic)
 
@@ -53,7 +53,7 @@ startSession m = connect "localhost" "8888" $ \(sock, addr) -> do
     end handler
     return ret
 
-data Reply = Sat
+data Reply = Sat (Maybe JRef)
            | Unsat
            | Replies [Bool] -- True: Sat, False: Unsat
            | InvalidReqeust String
@@ -77,10 +77,10 @@ invoke :: Handle -> LVar -> Name -> [JsExpr] -> IO Reply
 invoke handler lvar name es = sendCmd handler (CInvoke lvar name es)
 
 eval :: Handle -> JsExpr -> Maybe [JsExpr] -> IO Reply
-eval handler e mDomains = sendCmd handler (Eval e mDomains)
+eval handler e mDomains = sendCmd handler (CEval e mDomains)
 
 assert :: Handle -> JsExpr -> IO Reply
-assert handler e = sendCmd handler (Assert e)
+assert handler e = sendCmd handler (CAssert e)
 
 end :: Handle -> IO ()
 end handler = do

@@ -4,8 +4,6 @@ import Network.Socket (socketToHandle)
 import JS.Platform
 import System.IO
 
-main = startSession $ \sock -> do
-    handler <- socketToHandle sock ReadWriteMode
-    invoke handler (LInterface (Name "I")) (Name "f") []
-    end handler
-
+main = startSession $ \handler -> do
+    _ <- eval handler (JNew (Name "Bar") []) Nothing
+    return ()
