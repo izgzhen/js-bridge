@@ -16,7 +16,8 @@ extra-source-files:  ChangeLog.md
 cabal-version:       >=1.10
 
 library
-  exposed-modules:     JS.Platform, JS.Type
+  exposed-modules:     Language.JS.Platform
+                       Language.JS.Type
   -- other-modules:       
   other-extensions:    DeriveGeneric
   build-depends:       base >=4.9 && <4.10, bytestring >=0.10 && <0.11, aeson,

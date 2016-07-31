@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase, DeriveGeneric #-}
 
-module JS.Type where
+module Language.JS.Type where
 
 import GHC.Generics
 import Data.Aeson
@@ -61,3 +61,4 @@ instance Pretty Prim where
     pretty (PString s) = text "\"" <> text (show s) <> text "\""
     pretty (PBool True) = text "true"
     pretty (PBool False) = text "false"
+    pretty PUndefined = text "undefined"

@@ -1,12 +1,12 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module JS.Platform (
+module Language.JS.Platform (
   JsExpr(..), LVar(..), JsVal(..), JsType(..),
   RelBiOp(..), Reply(..), PlatPort, Command(..),
   startSession, invoke, eval, assert, end
 ) where
 
-import JS.Type
+import Language.JS.Type
 
 import Network.Simple.TCP
 import Network.Socket (socketToHandle)
