@@ -1,9 +1,10 @@
 {-# LANGUAGE DeriveGeneric #-}
 
 module Language.JS.Platform (
-  JsExpr(..), LVar(..), JsVal(..), JsType(..),
-  RelBiOp(..), Reply(..), PlatPort, Command(..),
-  startSession, invoke, eval, assert, end
+  JsExpr(..), LVar(..), JsVal(..), JsType(..), JAssert(..),
+  RelBiOp(..), Reply(..), PlatPort, Command(..), Domains(..),
+  startSession, invoke, eval, assert, end, eGetLine,
+  ePutLine
 ) where
 
 import Language.JS.Type
@@ -19,7 +20,6 @@ import GHC.Generics
 
 data Command = CInvoke LVar Name [JsExpr]
              | CEval JsExpr
-                     (Maybe [JsExpr]) -- probing assertions
              | CAssert JsExpr
              | CEnd
              deriving (Show, Generic)
@@ -32,12 +32,16 @@ data JsExpr = JVal JsVal
             | JNew Name [JsExpr]
             deriving (Show, Generic)
 
+data JAssert = JAssert Name JsExpr
+             deriving (Show, Generic)
+
 data LVar = LVal JsVal
           | LInterface Name
           deriving (Show, Generic)
 
 data JsVal = JVRef JRef
            | JVPrim Prim
+           | JVVar Name
            | JVClos Int -- n-ary closure
              deriving (Generic, Show)
 
@@ -45,30 +49,40 @@ data JsType = JTyObj Name
             | JTyPrim PrimType
             deriving (Show, Eq)
 
-data RelBiOp = NotEqual | Equal deriving (Show, Generic)
-
-startSession :: (PlatPort -> IO a) -> IO a
-startSession m = connect "localhost" "8888" $ \(sock, addr) -> do
-    putStrLn $ "Connection established to " ++ show addr
-    handler <- socketToHandle sock ReadWriteMode
-    ret <- m handler
-    end handler
-    return ret
+data RelBiOp = NotEqual
+             | Equal
+             | And
+             | LessThan
+             | LessEq
+             | GreaterThan
+             | GreaterEq
+             deriving (Show, Generic)
 
 data Reply = Sat (Maybe JRef)
            | Unsat
-           | Replies [Bool] -- True: Sat, False: Unsat
+           | Replies PrimType [Bool] -- True: Sat, False: Unsat
            | InvalidReqeust String
            deriving (Show, Generic)
 
 type PlatPort = Handle
 
+data Domains = Domains [(PrimType, [JAssert])] deriving (Show, Generic) -- Domain assertions
+
+startSession :: Domains -> (PlatPort -> IO a) -> IO a
+startSession domains f = connect "localhost" "8888" $ \(sock, addr) -> do
+    putStrLn $ "Connection established to " ++ show addr
+    handler <- socketToHandle sock ReadWriteMode
+    putStrLn "[SEND DOMAINS]"
+    ePutLine handler domains
+    ret <- f handler
+    end handler
+    return ret
+
 sendCmd :: Handle -> Command -> IO Reply
 sendCmd handler cmd = do
   putStrLn $ "[SEND REQ] " ++ show cmd
-  BS.hPut handler (BSL.toStrict (encode cmd) `BC.snoc` '\n')
-  replyRaw <- BS.hGetLine handler
-  let mReply = decode (BSL.fromStrict replyRaw) :: Maybe Reply
+  ePutLine handler cmd
+  mReply <- eGetLine handler
   case mReply of
       Just reply -> do
         putStrLn $ "[GET RES] " ++ show reply
@@ -78,8 +92,8 @@ sendCmd handler cmd = do
 invoke :: Handle -> LVar -> Name -> [JsExpr] -> IO Reply
 invoke handler lvar name es = sendCmd handler (CInvoke lvar name es)
 
-eval :: Handle -> JsExpr -> Maybe [JsExpr] -> IO Reply
-eval handler e mDomains = sendCmd handler (CEval e mDomains)
+eval :: Handle -> JsExpr -> IO Reply
+eval handler e = sendCmd handler (CEval e)
 
 assert :: Handle -> JsExpr -> IO Reply
 assert handler e = sendCmd handler (CAssert e)
@@ -88,7 +102,13 @@ end :: Handle -> IO ()
 end handler = do
   let cmd = CEnd
   putStrLn $ "[SEND REQ] " ++ show cmd
-  BS.hPut handler (BSL.toStrict (encode cmd) `BC.snoc` '\n')
+  ePutLine handler cmd
+
+eGetLine :: FromJSON a => Handle -> IO (Maybe a)
+eGetLine handler = decode . BSL.fromStrict <$> BS.hGetLine handler
+
+ePutLine :: ToJSON a => Handle -> a -> IO ()
+ePutLine handler x = BS.hPut handler (BSL.toStrict (encode x) `BC.snoc` '\n')
 
 instance ToJSON Command where
     toEncoding = genericToEncoding defaultOptions
@@ -102,9 +122,15 @@ instance ToJSON RelBiOp where
     toEncoding = genericToEncoding defaultOptions
 instance ToJSON Reply where
     toEncoding = genericToEncoding defaultOptions
+instance ToJSON Domains where
+    toEncoding = genericToEncoding defaultOptions
+instance ToJSON JAssert where
+    toEncoding = genericToEncoding defaultOptions
 instance FromJSON Command
 instance FromJSON JsExpr
 instance FromJSON LVar
 instance FromJSON JsVal
 instance FromJSON RelBiOp
 instance FromJSON Reply
+instance FromJSON Domains
+instance FromJSON JAssert

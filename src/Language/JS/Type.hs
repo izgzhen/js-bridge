@@ -20,7 +20,7 @@ data PrimType = PTyNull
               | PTyDouble
               | PTyString
               | PTyBool
-              deriving (Show, Eq)
+              deriving (Generic, Ord, Show, Eq)
 
 newtype Name = Name { unName :: String } deriving (Eq, Show, Generic, Ord)
 
@@ -50,9 +50,12 @@ instance ToJSON Name where
     toEncoding = genericToEncoding defaultOptions
 instance ToJSON JRef where
     toEncoding = genericToEncoding defaultOptions
+instance ToJSON PrimType where
+    toEncoding = genericToEncoding defaultOptions
 instance FromJSON Prim
 instance FromJSON Name
 instance FromJSON JRef
+instance FromJSON PrimType
 
 instance Pretty Prim where
     pretty PNull = text "null"
