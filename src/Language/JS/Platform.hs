@@ -52,6 +52,7 @@ data JsType = JTyObj Name
 data RelBiOp = NotEqual
              | Equal
              | And
+             | Or
              | LessThan
              | LessEq
              | GreaterThan
@@ -62,7 +63,7 @@ data Reply = Sat (Maybe JRef)
            | Unsat
            | Replies PrimType [Bool] -- True: Sat, False: Unsat
            | InvalidReqeust String
-           | ReplyCallback [Reply]
+           | ReplyCallback [Maybe (Reply, [Reply])]
            deriving (Show, Generic)
 
 type PlatPort = Handle
