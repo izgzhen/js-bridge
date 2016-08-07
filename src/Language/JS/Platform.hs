@@ -30,6 +30,7 @@ data JsExpr = JVal JsVal
             | JAccess LVar Name
             | JRel RelBiOp JsExpr JsExpr
             | JNew Name [JsExpr]
+            | JEClos Int -- n-ary closure
             deriving (Show, Generic)
 
 data JAssert = JAssert Name JsExpr
@@ -42,7 +43,6 @@ data LVar = LVal JsVal
 data JsVal = JVRef JRef
            | JVPrim Prim
            | JVVar Name
-           | JVClos Int -- n-ary closure
              deriving (Generic, Show)
 
 data JsType = JTyObj Name
@@ -62,6 +62,7 @@ data Reply = Sat (Maybe JRef)
            | Unsat
            | Replies PrimType [Bool] -- True: Sat, False: Unsat
            | InvalidReqeust String
+           | ReplyCallback [Reply]
            deriving (Show, Generic)
 
 type PlatPort = Handle
