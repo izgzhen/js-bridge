@@ -10,7 +10,7 @@ main = startSession domains $ \handler -> do
     -- _ <- eval handler (JNew (Name "Bar") [])
     r <- eval handler (JCall (LInterface (Name "Foo"))
                              (Name "async")
-                             [ JVal (JVPrim (PInt 0))
+                             [ JVal (JVPrim (PInt 10))
                              , JEClos 1])
     print r
     return ()
