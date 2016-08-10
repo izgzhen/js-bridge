@@ -6,8 +6,7 @@ import GHC.Generics
 import Data.Aeson
 import Text.PrettyPrint.Leijen
 
-data Prim = PInt Int
-          | PDouble Double
+data Prim = PNumber Double
           | PBool Bool
           | PString String
           | PNull
@@ -16,8 +15,7 @@ data Prim = PInt Int
 
 data PrimType = PTyNull
               | PTyUndefined
-              | PTyInt
-              | PTyDouble
+              | PTyNumber
               | PTyString
               | PTyBool
               deriving (Generic, Ord, Show, Eq)
@@ -29,8 +27,7 @@ newtype JRef = JRef { unJRef :: Int } deriving (Eq, Ord, Show, Generic)
 inferPrimType :: Prim -> PrimType
 inferPrimType = \case
   PNull -> PTyNull
-  PInt _ -> PTyInt
-  PDouble _ -> PTyDouble
+  PNumber _ -> PTyNumber
   PString _ -> PTyString
   PBool _ -> PTyBool
   PUndefined -> PTyUndefined
@@ -39,8 +36,7 @@ defaultPrim :: PrimType -> Prim
 defaultPrim = \case
   PTyNull -> PNull
   PTyUndefined -> PUndefined
-  PTyInt -> PInt 0
-  PTyDouble -> PDouble 0.0
+  PTyNumber -> PNumber 0.0
   PTyString -> PString ""
   PTyBool -> PBool True
 
@@ -59,8 +55,7 @@ instance FromJSON PrimType
 
 instance Pretty Prim where
     pretty PNull = text "null"
-    pretty (PInt i) = pretty i
-    pretty (PDouble d) = pretty d
+    pretty (PNumber i) = pretty i
     pretty (PString s) = text "\"" <> text (show s) <> text "\""
     pretty (PBool True) = text "true"
     pretty (PBool False) = text "false"

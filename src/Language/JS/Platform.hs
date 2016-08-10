@@ -3,7 +3,7 @@
 module Language.JS.Platform (
   JsExpr(..), LVar(..), JsVal(..), JsType(..), JAssert(..),
   RelBiOp(..), Reply(..), PlatPort, Command(..), Domains(..),
-  startSession, invoke, call, assert, end, eGetLine,
+  startSession, invoke, call, end, eGetLine,
   ePutLine
 ) where
 
@@ -18,10 +18,10 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BC
 import GHC.Generics
 
-data Command = CInvoke LVar Name [JsExpr]
+data Command = CInvoke LVar Name [JsVal]
              -- | CEval JsExpr
-             | CCall LVar Name [JsExpr]
-             | CAssert JsExpr
+             | CCall LVar Name [JsVal]
+             -- | CAssert JsExpr
              | CEnd
              deriving (Show, Generic)
 
@@ -37,13 +37,13 @@ data JsExpr = JVal JsVal
 data JAssert = JAssert Name JsExpr
              deriving (Show, Generic)
 
-data LVar = LVal JsVal
+data LVar = LRef JRef
           | LInterface Name
           deriving (Show, Generic)
 
 data JsVal = JVRef JRef
-           | JVPrim Prim
-           | JVVar Name
+           | JVPrim PrimType JAssert
+           -- | JVVar Name
              deriving (Generic, Show)
 
 data JsType = JTyObj Name
@@ -92,14 +92,14 @@ sendCmd handler cmd = do
         return reply
       Nothing -> return (InvalidReqeust "Invalid reply")
 
-invoke :: Handle -> LVar -> Name -> [JsExpr] -> IO Reply
+invoke :: Handle -> LVar -> Name -> [JsVal] -> IO Reply
 invoke handler lvar name es = sendCmd handler (CInvoke lvar name es)
 
-call :: Handle -> LVar -> Name -> [JsExpr] -> IO Reply
+call :: Handle -> LVar -> Name -> [JsVal] -> IO Reply
 call handler lvar name es = sendCmd handler (CCall lvar name es)
 
-assert :: Handle -> JsExpr -> IO Reply
-assert handler e = sendCmd handler (CAssert e)
+-- assert :: Handle -> JsExpr -> IO Reply
+-- assert handler e = sendCmd handler (CAssert e)
 
 end :: Handle -> IO ()
 end handler = do
