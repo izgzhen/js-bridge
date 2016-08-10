@@ -42,7 +42,7 @@ data LVar = LVal JsVal
           deriving (Show, Generic)
 
 data JsVal = JVRef JRef
-           | JVPrim Prim
+           | JVPrim PrimType JAssert
            | JVVar Name
              deriving (Generic, Show)
 
