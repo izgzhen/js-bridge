@@ -1,10 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Language.JS.Platform (
-  JsExpr(..), LVar(..), JsVal(..), JsType(..), JAssert(..),
-  RelBiOp(..), Reply(..), PlatPort, Command(..), Domains(..),
-  eGetLine, ePutLine
-) where
+module Language.JS.Platform where
 
 import Language.JS.Type
 
@@ -16,7 +12,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BC
 import GHC.Generics
 
-data Command = CBoot Domains -- Bootstrapping
+data Command = CBoot Domains String -- Bootstrapping: domain assertions map and idl prelude
              | CCall LVar Name [JsVal] -- Call
              | CGet LVar Name
              | CSet LVar Name JsVal
@@ -25,7 +21,8 @@ data Command = CBoot Domains -- Bootstrapping
              deriving (Show, Generic)
 
 data JsExpr = JEBinary RelBiOp JsExpr JsExpr
-            -- | JEUnary UnaryOp JsExpr
+            -- | JEUnary UnaryOp JsExpr -- TODO
+            | JEPrim Prim
             | JEVar Name
             deriving (Show, Generic)
 
@@ -36,9 +33,12 @@ data LVar = LRef JRef
           | LInterface Name
           deriving (Show, Generic)
 
+newtype JsUnionVal = JsUnionVal [JsVal] deriving (Show, Generic)
+
 data JsVal = JVRef JRef
            | JVPrim PrimType JAssert
            | JVClos Int
+           | JVDict [(Name, JsVal)]
            deriving (Generic, Show)
 
 data JsType = JTyObj Name
@@ -97,6 +97,8 @@ instance ToJSON JsValResult where
     toEncoding = genericToEncoding defaultOptions
 instance ToJSON JsCallbackResult where
     toEncoding = genericToEncoding defaultOptions
+instance ToJSON JsUnionVal where
+    toEncoding = genericToEncoding defaultOptions
 
 instance FromJSON Command
 instance FromJSON JsExpr
@@ -108,3 +110,16 @@ instance FromJSON Domains
 instance FromJSON JAssert
 instance FromJSON JsValResult
 instance FromJSON JsCallbackResult
+instance FromJSON JsUnionVal
+
+(.>) :: JsExpr -> JsExpr -> JsExpr
+(.>) = JEBinary GreaterThan
+
+(.<) :: JsExpr -> JsExpr -> JsExpr
+(.<) = JEBinary LessThan
+
+(.==) :: JsExpr -> JsExpr -> JsExpr
+(.==) = JEBinary Equal
+
+(.@) :: String -> JsExpr -> JAssert
+(.@) x e = JAssert (Name x) e
