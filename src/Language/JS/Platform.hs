@@ -3,35 +3,30 @@
 module Language.JS.Platform (
   JsExpr(..), LVar(..), JsVal(..), JsType(..), JAssert(..),
   RelBiOp(..), Reply(..), PlatPort, Command(..), Domains(..),
-  startSession, invoke, call, end, eGetLine,
-  ePutLine
+  eGetLine, ePutLine
 ) where
 
 import Language.JS.Type
 
-import Network.Simple.TCP
-import Network.Socket (socketToHandle)
 import System.IO
+
 import Data.Aeson
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BC
 import GHC.Generics
 
-data Command = CInvoke LVar Name [JsVal]
-             -- | CEval JsExpr
-             | CCall LVar Name [JsVal]
-             -- | CAssert JsExpr
-             | CEnd
+data Command = CBoot Domains -- Bootstrapping
+             | CCall LVar Name [JsVal] -- Call
+             | CGet LVar Name
+             | CSet LVar Name JsVal
+             | CNew Name (Maybe [JsVal]) -- Nothing means "by default"
+             | CEnd -- End session
              deriving (Show, Generic)
 
-data JsExpr = JVal JsVal
-            | JInterface Name
-            -- | JCall LVar Name [JsExpr]
-            | JAccess LVar Name
-            | JRel RelBiOp JsExpr JsExpr
-            | JNew Name [JsExpr]
-            | JEClos Int -- n-ary closure
+data JsExpr = JEBinary RelBiOp JsExpr JsExpr
+            -- | JEUnary UnaryOp JsExpr
+            | JEVar Name
             deriving (Show, Generic)
 
 data JAssert = JAssert Name JsExpr
@@ -43,8 +38,8 @@ data LVar = LRef JRef
 
 data JsVal = JVRef JRef
            | JVPrim PrimType JAssert
-           -- | JVVar Name
-             deriving (Generic, Show)
+           | JVClos Int
+           deriving (Generic, Show)
 
 data JsType = JTyObj Name
             | JTyPrim PrimType
@@ -60,52 +55,21 @@ data RelBiOp = NotEqual
              | GreaterEq
              deriving (Show, Generic)
 
-data Reply = Sat (Maybe JRef)
-           | Unsat
-           | Replies PrimType [Bool] -- True: Sat, False: Unsat
-           | InvalidReqeust String
-           | ReplyCallback [Maybe (Reply, [Reply])]
+data JsValResult = JVRRef JRef
+                 | JVRPrim PrimType [Bool]
+                 | JVRObj [(Name, JsValResult)]
+                 deriving (Show, Generic)
+
+data JsCallbackResult = JsCallbackResult [Maybe (JsValResult)] deriving (Show, Generic)
+
+data Reply = Sat (Maybe JsValResult, Maybe JsCallbackResult) -- return values and callback feed
+           | Unsat String -- Check failed and explaination
+           | InvalidReqeust
            deriving (Show, Generic)
 
 type PlatPort = Handle
 
 data Domains = Domains [(PrimType, [JAssert])] deriving (Show, Generic) -- Domain assertions
-
-startSession :: Domains -> (PlatPort -> IO a) -> IO a
-startSession domains f = connect "localhost" "8888" $ \(sock, addr) -> do
-    putStrLn $ "Connection established to " ++ show addr
-    handler <- socketToHandle sock ReadWriteMode
-    putStrLn "[SEND DOMAINS]"
-    ePutLine handler domains
-    ret <- f handler
-    end handler
-    return ret
-
-sendCmd :: Handle -> Command -> IO Reply
-sendCmd handler cmd = do
-  putStrLn $ "[SEND REQ] " ++ show cmd
-  ePutLine handler cmd
-  mReply <- eGetLine handler
-  case mReply of
-      Just reply -> do
-        putStrLn $ "[GET RES] " ++ show reply
-        return reply
-      Nothing -> return (InvalidReqeust "Invalid reply")
-
-invoke :: Handle -> LVar -> Name -> [JsVal] -> IO Reply
-invoke handler lvar name es = sendCmd handler (CInvoke lvar name es)
-
-call :: Handle -> LVar -> Name -> [JsVal] -> IO Reply
-call handler lvar name es = sendCmd handler (CCall lvar name es)
-
--- assert :: Handle -> JsExpr -> IO Reply
--- assert handler e = sendCmd handler (CAssert e)
-
-end :: Handle -> IO ()
-end handler = do
-  let cmd = CEnd
-  putStrLn $ "[SEND REQ] " ++ show cmd
-  ePutLine handler cmd
 
 eGetLine :: FromJSON a => Handle -> IO (Maybe a)
 eGetLine handler = decode . BSL.fromStrict <$> BS.hGetLine handler
@@ -129,6 +93,11 @@ instance ToJSON Domains where
     toEncoding = genericToEncoding defaultOptions
 instance ToJSON JAssert where
     toEncoding = genericToEncoding defaultOptions
+instance ToJSON JsValResult where
+    toEncoding = genericToEncoding defaultOptions
+instance ToJSON JsCallbackResult where
+    toEncoding = genericToEncoding defaultOptions
+
 instance FromJSON Command
 instance FromJSON JsExpr
 instance FromJSON LVar
@@ -137,3 +106,5 @@ instance FromJSON RelBiOp
 instance FromJSON Reply
 instance FromJSON Domains
 instance FromJSON JAssert
+instance FromJSON JsValResult
+instance FromJSON JsCallbackResult

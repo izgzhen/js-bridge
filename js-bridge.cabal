@@ -18,6 +18,7 @@ cabal-version:       >=1.10
 library
   exposed-modules:     Language.JS.Platform
                        Language.JS.Type
+                       Control.JS.Utils.Client
   -- other-modules:       
   other-extensions:    DeriveGeneric
   build-depends:       base >=4.9 && <4.10, bytestring >=0.10 && <0.11, aeson,

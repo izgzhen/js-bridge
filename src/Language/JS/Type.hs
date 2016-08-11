@@ -10,11 +10,9 @@ data Prim = PNumber Double
           | PBool Bool
           | PString String
           | PNull
-          | PUndefined
           deriving (Generic, Show, Eq)
 
 data PrimType = PTyNull
-              | PTyUndefined
               | PTyNumber
               | PTyString
               | PTyBool
@@ -30,12 +28,10 @@ inferPrimType = \case
   PNumber _ -> PTyNumber
   PString _ -> PTyString
   PBool _ -> PTyBool
-  PUndefined -> PTyUndefined
 
 defaultPrim :: PrimType -> Prim
 defaultPrim = \case
   PTyNull -> PNull
-  PTyUndefined -> PUndefined
   PTyNumber -> PNumber 0.0
   PTyString -> PString ""
   PTyBool -> PBool True
@@ -59,4 +55,3 @@ instance Pretty Prim where
     pretty (PString s) = text "\"" <> text (show s) <> text "\""
     pretty (PBool True) = text "true"
     pretty (PBool False) = text "false"
-    pretty PUndefined = text "undefined"
