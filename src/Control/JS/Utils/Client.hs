@@ -28,7 +28,7 @@ sendCmd handler cmd = do
         return reply
       Nothing -> return InvalidReqeust
 
-call :: Handle -> LVar -> Name -> [JsVal] -> IO Reply
+call :: Handle -> LVar -> Name -> [JsUnionVal] -> IO Reply
 call handler lvar x args = sendCmd handler $ CCall lvar x args
 
 get :: Handle -> LVar -> Name -> IO Reply
@@ -40,7 +40,7 @@ set handler lvar x val = sendCmd handler $ CSet lvar x val
 newDef :: Handle -> Name -> IO Reply
 newDef handler x = sendCmd handler (CNew x Nothing)
 
-newCons :: Handle -> Name -> [JsVal] -> IO Reply
+newCons :: Handle -> Name -> [JsUnionVal] -> IO Reply
 newCons handler iface args = sendCmd handler (CNew iface (Just args))
 
 end :: Handle -> IO ()

@@ -8,12 +8,14 @@ import Text.PrettyPrint.Leijen
 
 data Prim = PNumber Double
           | PBool Bool
+          | PInt Int
           | PString String
           | PNull
           deriving (Generic, Show, Eq)
 
 data PrimType = PTyNull
               | PTyNumber
+              | PTyInt
               | PTyString
               | PTyBool
               deriving (Generic, Ord, Show, Eq)
@@ -26,12 +28,14 @@ inferPrimType :: Prim -> PrimType
 inferPrimType = \case
   PNull -> PTyNull
   PNumber _ -> PTyNumber
+  PInt _ -> PTyInt
   PString _ -> PTyString
   PBool _ -> PTyBool
 
 defaultPrim :: PrimType -> Prim
 defaultPrim = \case
   PTyNull -> PNull
+  PTyInt -> PInt 0
   PTyNumber -> PNumber 0.0
   PTyString -> PString ""
   PTyBool -> PBool True
@@ -55,3 +59,4 @@ instance Pretty Prim where
     pretty (PString s) = text "\"" <> text (show s) <> text "\""
     pretty (PBool True) = text "true"
     pretty (PBool False) = text "false"
+    pretty (PInt i) = pretty i

@@ -13,15 +13,14 @@ import qualified Data.ByteString.Char8 as BC
 import GHC.Generics
 
 data Command = CBoot Domains String -- Bootstrapping: domain assertions map and idl prelude
-             | CCall LVar Name [JsVal] -- Call
+             | CCall LVar Name [JsUnionVal] -- Call
              | CGet LVar Name
-             | CSet LVar Name JsVal
-             | CNew Name (Maybe [JsVal]) -- Nothing means "by default"
+             | CSet LVar Name JsVal -- Property can't be union type
+             | CNew Name (Maybe [JsUnionVal]) -- Nothing means "by default"
              | CEnd -- End session
              deriving (Show, Generic)
 
 data JsExpr = JEBinary RelBiOp JsExpr JsExpr
-            -- | JEUnary UnaryOp JsExpr -- TODO
             | JEPrim Prim
             | JEVar Name
             deriving (Show, Generic)
@@ -35,10 +34,10 @@ data LVar = LRef JRef
 
 newtype JsUnionVal = JsUnionVal [JsVal] deriving (Show, Generic)
 
-data JsVal = JVRef JRef
-           | JVPrim PrimType JAssert
-           | JVClos Int
-           | JVDict [(Name, JsVal)]
+data JsVal = JVRef JRef -- Interface
+           | JVPrim PrimType JAssert -- Primitives
+           | JVClos Int -- Callback
+           | JVDict [(Name, JsVal)] -- Dictionary
            deriving (Generic, Show)
 
 data JsType = JTyObj Name
@@ -60,9 +59,9 @@ data JsValResult = JVRRef JRef
                  | JVRObj [(Name, JsValResult)]
                  deriving (Show, Generic)
 
-data JsCallbackResult = JsCallbackResult [Maybe (JsValResult)] deriving (Show, Generic)
+data JsCallbackResult = JsCallbackResult [Maybe [JsValResult]] deriving (Show, Generic)
 
-data Reply = Sat (Maybe JsValResult, Maybe JsCallbackResult) -- return values and callback feed
+data Reply = Sat (JsValResult, Maybe JsCallbackResult) -- return values and callback feed
            | Unsat String -- Check failed and explaination
            | InvalidReqeust
            deriving (Show, Generic)
@@ -123,3 +122,12 @@ instance FromJSON JsUnionVal
 
 (.@) :: String -> JsExpr -> JAssert
 (.@) x e = JAssert (Name x) e
+
+
+app :: JAssert -> Name -> JsExpr
+app jass@(JAssert x0 je) x = subst je
+  where
+    subst (JEBinary op e1 e2) = JEBinary op (subst e1) (subst e2)
+    subst (JEPrim prim) = JEPrim prim
+    subst (JEVar x0') | x0 == x0' = JEVar x
+                      | otherwise = error $ "Non-closed assertion: " ++ show jass
