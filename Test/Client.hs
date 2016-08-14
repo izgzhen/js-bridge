@@ -58,12 +58,11 @@ caseUnionEval = testHarness $ \handler -> do
                         [oneInt]
     print res
 
--- FIXME: to pass this, we need effectful initialization
--- caseDictEval :: IO ()
--- caseDictEval = testHarness $ \handler -> do
---     res <- call handler (LInterface (Name "Foo")) (Name "use_dict")
---                         [dictA]
---     print res
+caseDictEval :: IO ()
+caseDictEval = testHarness $ \handler -> do
+    res <- call handler (LInterface (Name "Foo")) (Name "use_dict")
+                        [dictA]
+    print res
 
 caseNewDef :: IO ()
 caseNewDef = testHarness $ \handler -> do
@@ -92,4 +91,4 @@ caseSetGetAttr = testHarness $ \handler -> do
 --     print res
 
 main :: IO ()
-main = caseSetGetAttr
+main = caseDictEval
