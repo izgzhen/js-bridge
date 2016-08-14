@@ -62,5 +62,15 @@ caseDictEval = testHarness $ \handler -> do
                         [dictA]
     print res
 
+caseNewDef :: IO ()
+caseNewDef = testHarness $ \handler -> do
+    res <- newDef handler (Name "HTMLBar")
+    print res
+
+caseAccessConst :: IO ()
+caseAccessConst = testHarness $ \handler -> do
+    res <- get handler (LInterface (Name "Foo")) (Name "SOME_CONST")
+    print res
+
 main :: IO ()
-main = caseDictEval
+main = caseAccessConst

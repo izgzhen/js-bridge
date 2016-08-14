@@ -5,10 +5,15 @@ dictionary A {
   long g;
 };
 
+[HTMLConstructor]
+interface HTMLBar {};
+
 [Constructor]
 interface Bar {};
 
 interface Foo {
+    const short SOME_CONST = 0x00000100;
+
     ///- requires bar != null
     void use_bar(Bar? bar);
 

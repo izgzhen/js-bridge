@@ -56,6 +56,7 @@ data RelBiOp = NotEqual
 
 data JsValResult = JVRRef JRef
                  | JVRPrim PrimType [Bool]
+                 | JVRPrimPrecise Prim
                  | JVRObj [(Name, JsValResult)]
                  deriving (Show, Generic)
 
