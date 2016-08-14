@@ -8,8 +8,13 @@ dictionary A {
 [HTMLConstructor]
 interface HTMLBar {};
 
-[Constructor]
-interface Bar {};
+[
+///- ensures (ret != null)
+Constructor
+]
+interface Bar {
+    attribute short myAttr;
+};
 
 interface Foo {
     const short SOME_CONST = 0x00000100;

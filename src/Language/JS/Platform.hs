@@ -3,6 +3,7 @@
 module Language.JS.Platform where
 
 import Language.JS.Type
+import Text.PrettyPrint.Leijen hiding ((<$>))
 
 import System.IO
 
@@ -132,3 +133,20 @@ app jass@(JAssert x0 je) x = subst je
     subst (JEPrim prim) = JEPrim prim
     subst (JEVar x0') | x0 == x0' = JEVar x
                       | otherwise = error $ "Non-closed assertion: " ++ show jass
+
+instance Pretty JsExpr where
+  pretty (JEBinary op e1 e2) = parens (pretty e1 <+> pretty op <+> pretty e2)
+  pretty (JEPrim prim) = pretty prim
+  pretty (JEVar (Name x)) = text x
+
+instance Pretty RelBiOp where
+    pretty = \case
+        NotEqual -> text "!="
+        Equal -> text "=="
+        And -> text "&&"
+        Or -> text "||"
+        LessThan -> text "<"
+        LessEq -> text "<="
+        GreaterThan -> text ">"
+        GreaterEq -> text ">="
+
