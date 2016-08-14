@@ -13,7 +13,9 @@ domains = Domains [(PTyNumber, [ "x" .@ (x .> zero)
                                , "x" .@ (x .< zero)]),
                    (PTyInt   , [ "x" .@ (x .> zeroi)
                                , "x" .@ (x .== zeroi)
-                               , "x" .@ (x .< zeroi)])]
+                               , "x" .@ (x .< zeroi)]),
+                   (PTyBool  , [ "x" .@ (x .== JEPrim (PBool True))
+                               , "x" .@ (x .== JEPrim (PBool False))])]
 
 onePointNine :: JsUnionVal
 onePointNine = JsUnionVal [JVPrim PTyNumber ("x" .@ (x .== JEPrim (PNumber 1.9)))]
@@ -56,11 +58,12 @@ caseUnionEval = testHarness $ \handler -> do
                         [oneInt]
     print res
 
-caseDictEval :: IO ()
-caseDictEval = testHarness $ \handler -> do
-    res <- call handler (LInterface (Name "Foo")) (Name "use_dict")
-                        [dictA]
-    print res
+-- FIXME: to pass this, we need effectful initialization
+-- caseDictEval :: IO ()
+-- caseDictEval = testHarness $ \handler -> do
+--     res <- call handler (LInterface (Name "Foo")) (Name "use_dict")
+--                         [dictA]
+--     print res
 
 caseNewDef :: IO ()
 caseNewDef = testHarness $ \handler -> do
@@ -79,6 +82,14 @@ caseSetGetAttr = testHarness $ \handler -> do
     print res1
     res <- get handler (LRef r) (Name "myAttr")
     print res
+
+-- caseGhostAttr :: IO ()
+-- caseGhostAttr = testHarness $ \handler -> do
+--     Sat (JVRRef r, _) <- newCons handler (Name "Bar") []
+--     res1 <- call handler (LRef r) (Name "bumpCounter") []
+--     print res1
+--     res <- call handler (LRef r) (Name "hasBumped") []
+--     print res
 
 main :: IO ()
 main = caseSetGetAttr
