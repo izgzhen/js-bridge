@@ -10,9 +10,15 @@ domains =
                             , "x" .@ (x .== zero)
                             , "x" .@ (x .< zero)])]
 
-main :: IO ()
-main = do
+caseSimpleEval :: IO ()
+caseSimpleEval = do
     idl <- readFile "Test/prelude.webidl"
     startSession domains idl $ \handler -> do
-        _ <- newCons handler (Name "Bar") []
+        res <- newCons handler (Name "Bar") []
+        print res
         return ()
+
+
+main :: IO ()
+main = caseSimpleEval
+
