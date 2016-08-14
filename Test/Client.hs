@@ -36,13 +36,21 @@ casePrimEval = testHarness $ \handler -> do
 
 caseWrongArgNum :: IO ()
 caseWrongArgNum = testHarness $ \handler -> do
-    res <- call handler (LInterface (Name "Foo")) (Name "pos") [onePointNine]
+    res <- call handler (LInterface (Name "Foo")) (Name "pos")
+                        [onePointNine]
     print res
 
 caseCallbackEval :: IO ()
 caseCallbackEval = testHarness $ \handler -> do
-    res <- call handler (LInterface (Name "Foo")) (Name "async") [oneInt, JsUnionVal [JVClos 1]]
+    res <- call handler (LInterface (Name "Foo")) (Name "async")
+                        [oneInt, JsUnionVal [JVClos 1]]
+    print res
+
+caseUnionEval :: IO ()
+caseUnionEval = testHarness $ \handler -> do
+    res <- call handler (LInterface (Name "Foo")) (Name "use_union")
+                        [oneInt]
     print res
 
 main :: IO ()
-main = caseCallbackEval
+main = caseUnionEval
