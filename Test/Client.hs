@@ -20,6 +20,10 @@ onePointNine = JsUnionVal [JVPrim PTyNumber ("x" .@ (x .== JEPrim (PNumber 1.9))
 
 oneInt = JsUnionVal [JVPrim PTyInt ("x" .@ (x .== JEPrim (PInt 1)))]
 
+dictA :: JsUnionVal
+dictA = JsUnionVal [JVDict [ (Name "c", JVPrim PTyInt ("x" .@ (x .== JEPrim (PInt 11))))
+                           , (Name "g", JVPrim PTyInt ("x" .@ (x .== JEPrim (PInt 1))))]]
+
 testHarness f = do
     idl <- readFile "Test/prelude.webidl"
     startSession domains idl f
@@ -52,5 +56,11 @@ caseUnionEval = testHarness $ \handler -> do
                         [oneInt]
     print res
 
+caseDictEval :: IO ()
+caseDictEval = testHarness $ \handler -> do
+    res <- call handler (LInterface (Name "Foo")) (Name "use_dict")
+                        [dictA]
+    print res
+
 main :: IO ()
-main = caseUnionEval
+main = caseDictEval

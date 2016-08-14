@@ -1,5 +1,10 @@
 callback Qux = void (short x);
 
+dictionary A {
+  long c;
+  long g;
+};
+
 [Constructor]
 interface Bar {};
 
@@ -15,4 +20,7 @@ interface Foo {
 
     ///- requires (if bos.Bar? then (bos.Bar != null) else (bos.Int > 0))
     void use_union((Bar or short) bos);
+
+    ///- requires (a != null && a.c > 10)
+    void use_dict(A a);
 };
