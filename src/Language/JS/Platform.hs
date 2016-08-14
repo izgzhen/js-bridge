@@ -63,7 +63,7 @@ data JsCallbackResult = JsCallbackResult [Maybe [JsValResult]] deriving (Show, G
 
 data Reply = Sat (JsValResult, Maybe JsCallbackResult) -- return values and callback feed
            | Unsat String -- Check failed and explaination
-           | InvalidReqeust
+           | InvalidReqeust String
            deriving (Show, Generic)
 
 type PlatPort = Handle

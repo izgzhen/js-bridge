@@ -26,7 +26,7 @@ sendCmd handler cmd = do
       Just reply -> do
         putStrLn $ "[GET RES] " ++ show reply
         return reply
-      Nothing -> return InvalidReqeust
+      Nothing -> return (InvalidReqeust "Invalid reply")
 
 call :: Handle -> LVar -> Name -> [JsUnionVal] -> IO Reply
 call handler lvar x args = sendCmd handler $ CCall lvar x args

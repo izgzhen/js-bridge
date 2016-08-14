@@ -12,7 +12,7 @@ domains =
 
 main :: IO ()
 main = do
-    idl <- readFile "prelude.webidl"
+    idl <- readFile "Test/prelude.webidl"
     startSession domains idl $ \handler -> do
         _ <- newCons handler (Name "Bar") []
         return ()

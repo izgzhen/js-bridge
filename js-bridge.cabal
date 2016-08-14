@@ -11,6 +11,7 @@ library
   exposed-modules:     Language.JS.Platform
                        Language.JS.Type
                        Control.JS.Utils.Client
+                       Control.JS.Utils.Server
   other-extensions:    DeriveGeneric
   build-depends:       base >=4.9 && <4.10, bytestring >=0.10 && <0.11, aeson,
                        network-simple, wl-pprint, network
