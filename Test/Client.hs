@@ -75,7 +75,9 @@ caseAccessConst = testHarness $ \handler -> do
 caseSetGetAttr :: IO ()
 caseSetGetAttr = testHarness $ \handler -> do
     Sat (JVRRef r, _) <- newCons handler (Name "Bar") []
-    res <- set handler (LRef r) (Name "myAttr") (JVPrim PTyInt ("x" .@ (x .== JEPrim (PInt 11))))
+    res1 <- set handler (LRef r) (Name "myAttr") (JVPrim PTyInt ("x" .@ (x .== JEPrim (PInt 11))))
+    print res1
+    res <- get handler (LRef r) (Name "myAttr")
     print res
 
 main :: IO ()
