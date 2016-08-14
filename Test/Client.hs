@@ -16,9 +16,14 @@ caseSimpleEval = do
     startSession domains idl $ \handler -> do
         res <- newCons handler (Name "Bar") []
         print res
-        return ()
 
+caseWrongNumArgs :: IO ()
+caseWrongNumArgs = do
+    idl <- readFile "Test/prelude.webidl"
+    startSession domains idl $ \handler -> do
+        res <- call handler (LInterface (Name "Foo")) (Name "pos") []
+        print res
 
 main :: IO ()
-main = caseSimpleEval
+main = caseWrongNumArgs
 
