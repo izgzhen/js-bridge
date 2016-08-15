@@ -82,13 +82,13 @@ caseSetGetAttr = testHarness $ \handler -> do
     res <- get handler (LRef r) (Name "myAttr")
     print res
 
--- caseGhostAttr :: IO ()
--- caseGhostAttr = testHarness $ \handler -> do
---     Sat (JVRRef r, _) <- newCons handler (Name "Bar") []
---     res1 <- call handler (LRef r) (Name "bumpCounter") []
---     print res1
---     res <- call handler (LRef r) (Name "hasBumped") []
---     print res
+caseGhostAttr :: IO ()
+caseGhostAttr = testHarness $ \handler -> do
+    Sat (JVRRef r, _) <- newCons handler (Name "Bar") []
+    res1 <- call handler (LRef r) (Name "bumpCounter") []
+    print res1
+    res <- call handler (LRef r) (Name "hasBumped") []
+    print res
 
 main :: IO ()
-main = caseDictEval
+main = caseGhostAttr

@@ -8,13 +8,16 @@ dictionary A {
 [HTMLConstructor]
 interface HTMLBar {};
 
-[Constructor]
+[
+///- effects { this.gCounter := 0 }
+Constructor
+]
 interface Bar {
     attribute short myAttr;
 
     ///- ghost attribute short gCounter;
 
-    ///- ensures this.gCounter == old(this.gCounter) + 1
+    ///- effects { this.gCounter := this.gCounter + 1 }
     void bumpCounter();
 
     ///- ensures (ret == (this.gCounter > 0))
