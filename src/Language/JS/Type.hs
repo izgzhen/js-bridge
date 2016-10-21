@@ -1,10 +1,12 @@
-{-# LANGUAGE LambdaCase, DeriveGeneric #-}
+{-# LANGUAGE LambdaCase, DeriveGeneric, FlexibleInstances, UndecidableInstances #-}
 
 module Language.JS.Type where
 
 import GHC.Generics
 import Data.Aeson
 import Text.PrettyPrint.Leijen
+import Data.MessagePack
+import Data.MessagePack.Aeson
 
 data Prim = PNumber Double
           | PBool Bool
@@ -52,6 +54,16 @@ instance FromJSON Prim
 instance FromJSON Name
 instance FromJSON JRef
 instance FromJSON PrimType
+
+instance (FromJSON x, ToJSON x) => MessagePack x where
+  toObject = fromAeson . toJSON
+  fromObject o =
+    case toAeson o of
+      Nothing -> Nothing
+      Just x ->
+        case fromJSON x of
+          Error _ -> Nothing
+          Success y -> Just y
 
 instance Pretty Prim where
     pretty PNull = text "null"
