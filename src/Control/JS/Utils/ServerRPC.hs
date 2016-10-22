@@ -18,11 +18,17 @@ div x y = return $ fromIntegral x / fromIntegral y
 true :: JAssert
 true = JAssert (Name "x") (JEPrim (PBool True))
 
-parseSingleVal :: String -> Maybe JsVal
-parseSingleVal "Bool" = Just (JVPrim PTyBool true)
-parseSingleVal _ = Nothing
+parseSingleVal :: String -> Either String JsVal
+parseSingleVal "Bool" = Right (JVPrim PTyBool true)
+parseSingleVal "Num" = Right (JVPrim PTyNumber true)
+parseSingleVal "Str" = Right (JVPrim PTyString true)
+parseSingleVal "Null" = Right (JVPrim PTyNull true)
+parseSingleVal "UInt" = Right (JVPrim PTyInt true)
+parseSingleVal "NotUInt" = Right (JVPrim PTyNumber true) -- XXX: too coarse
+parseSingleVal s = Left s
 
-parseVal :: String -> Maybe JsUnionVal
+
+parseVal :: String -> Either String JsUnionVal
 parseVal s = let vals = split "|" s in
              JsUnionVal <$> sequence (map parseSingleVal vals)
 
