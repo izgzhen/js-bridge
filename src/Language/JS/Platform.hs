@@ -37,6 +37,7 @@ newtype JsUnionVal = JsUnionVal [JsVal] deriving (Show, Generic)
 
 data JsVal = JVRef JRef -- Interface
            | JVPrim PrimType JAssert -- Primitives
+           | JVConst Prim -- Constant Primitives
            | JVClos Int -- Callback
            | JVDict [(Name, JsVal)] -- Dictionary
            deriving (Generic, Show)
