@@ -41,6 +41,9 @@ data JsVal = JVRef JRef -- Interface
            | JVDict [(Name, JsVal)] -- Dictionary
            deriving (Generic, Show)
 
+newtype JsValStr = JsValStr String -- String representation
+                 deriving (Show, Generic)
+
 data JsType = JTyObj Name
             | JTyPrim PrimType
             deriving (Show, Eq)
@@ -100,6 +103,8 @@ instance ToJSON JsCallbackResult where
     toEncoding = genericToEncoding defaultOptions
 instance ToJSON JsUnionVal where
     toEncoding = genericToEncoding defaultOptions
+instance ToJSON JsValStr where
+    toEncoding = genericToEncoding defaultOptions
 
 instance FromJSON Command
 instance FromJSON JsExpr
@@ -112,6 +117,7 @@ instance FromJSON JAssert
 instance FromJSON JsValResult
 instance FromJSON JsCallbackResult
 instance FromJSON JsUnionVal
+instance FromJSON JsValStr
 
 (.>) :: JsExpr -> JsExpr -> JsExpr
 (.>) = JEBinary GreaterThan
