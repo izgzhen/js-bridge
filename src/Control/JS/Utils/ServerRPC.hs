@@ -10,13 +10,12 @@ import Control.Monad (msum)
 import Data.Either.Utils (maybeToEither)
 import Control.Monad.IO.Class (liftIO)
 
-add, sub, mul :: Int -> Int -> Server Int
-add x y = return $ x + y
-sub x y = return $ x - y
-mul x y = return $ x * y
-
-div :: Int -> Int -> Server Double
-div x y = return $ fromIntegral x / fromIntegral y
+call :: LVar -> Name -> [JsUnionVal] -> Server ()
+call lvar name vals = do
+    liftIO $ print lvar
+    liftIO $ print name
+    liftIO $ print vals
+    return ()
 
 true :: JAssert
 true = JAssert (Name "x") (JEPrim (PBool True))
@@ -56,9 +55,6 @@ unknown (JsValStr s) = do
     liftIO $ print (parseVal s)
     return 1
 
-main = serve 8888 [ method "add" add
-                  , method "sub" sub
-                  , method "mul" mul
-                  , method "div" div
+main = serve 8888 [ method "call" call
                   , method "unknown" unknown ]
 
