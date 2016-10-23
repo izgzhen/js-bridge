@@ -10,12 +10,21 @@ import Control.Monad (msum)
 import Data.Either.Utils (maybeToEither)
 import Control.Monad.IO.Class (liftIO)
 
+type Hash = Int
+
 call :: LVar -> Name -> [JsUnionVal] -> Server ()
 call lvar name vals = do
     liftIO $ print lvar
     liftIO $ print name
     liftIO $ print vals
     return ()
+
+construct :: Name -> [JsUnionVal] -> Hash -> Server JRef
+construct iname vals hash = do
+    liftIO $ print iname
+    liftIO $ print vals
+    liftIO $ print hash
+    return $ JRef 1
 
 true :: JAssert
 true = JAssert (Name "x") (JEPrim (PBool True))
@@ -56,5 +65,6 @@ unknown (JsValStr s) = do
     return 1
 
 main = serve 8888 [ method "call" call
-                  , method "unknown" unknown ]
+                  , method "unknown" unknown
+                  , method "construct" construct ]
 
