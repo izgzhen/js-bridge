@@ -1,4 +1,4 @@
-name:                js-bridge
+name:                js-base
 version:             0.1.0.0
 license:             BSD3
 license-file:        LICENSE
@@ -10,21 +10,10 @@ cabal-version:       >=1.10
 library
   exposed-modules:     Language.JS.Platform
                        Language.JS.Type
-                       Control.JS.Utils.Client
-                       Control.JS.Utils.Server
   default-extensions:  LambdaCase
   other-extensions:    DeriveGeneric
   build-depends:       base >=4.9 && <4.10, bytestring >=0.10 && <0.11, aeson,
-                       network-simple, wl-pprint, network, msgpack, msgpack-aeson,
-                       MissingH
+                       wl-pprint, MissingH
   hs-source-dirs:      src
   default-language:    Haskell2010
   ghc-options:         -Wall
-
-test-suite test-js-client
-    type:              exitcode-stdio-1.0
-    main-is:           Client.hs
-    hs-source-dirs:    Test
-    build-depends:     base, js-bridge
-    default-language:  Haskell2010
-    ghc-options:       -Wall

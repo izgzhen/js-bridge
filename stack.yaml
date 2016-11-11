@@ -39,12 +39,12 @@ packages:
 - '.'
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
-extra-deps:
-- network-simple-0.4.0.5
-- binary-conduit-1.2.4.1
-- msgpack-1.0.0
-- msgpack-aeson-0.1.0.0
-- binary-0.7.6.1
+extra-deps: []
+# - network-simple-0.4.0.5
+# - binary-conduit-1.2.4.1
+# - msgpack-1.0.0
+# - msgpack-aeson-0.1.0.0
+# - binary-0.7.6.1
 
 # Override default flag values for local packages and extra-deps
 flags: {}
